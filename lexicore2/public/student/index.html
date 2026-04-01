@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace Apprenant — Lexicore Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C; --gold-light: #E8C870;
+    --dark: #0D0D0D; --dark2: #161616; --dark3: #1E1E1E;
+    --text: #E8E0D0; --muted: #888;
+    --green: #4CAF50; --red: #ef5350;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--dark); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* ── Login ── */
+  #login-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .login-box {
+    background: var(--dark2); border: 1px solid rgba(201,168,76,0.2);
+    padding: 3rem; border-radius: 8px; width: 100%; max-width: 400px;
+  }
+  .login-brand { text-align: center; margin-bottom: 2rem; }
+  .login-brand h1 { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2rem; }
+  .login-brand p { color: var(--muted); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
+  label { display: block; font-size: 0.75rem; letter-spacing: 1px; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; }
+  input {
+    width: 100%; background: var(--dark3); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text); padding: 0.8rem 1rem; border-radius: 4px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--gold); }
+  .field { margin-bottom: 1.2rem; }
+  .btn-login {
+    background: var(--gold); color: var(--dark); border: none;
+    padding: 0.9rem; border-radius: 4px; width: 100%;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    cursor: pointer; font-size: 0.95rem; letter-spacing: 0.5px;
+    transition: background 0.2s; margin-top: 0.5rem;
+  }
+  .btn-login:hover { background: var(--gold-light); }
+  .error-box {
+    background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3);
+    border-radius: 4px; padding: 0.8rem 1rem;
+    color: var(--red); font-size: 0.9rem; margin-top: 1rem; display: none;
+  }
+
+  /* ── App ── */
+  #app { display: none; }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .logo { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.2rem; }
+  .logo span { color: var(--muted); font-size: 0.7rem; font-family: 'DM Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; margin-left: 0.5rem; }
+  .user-info { display: flex; align-items: center; gap: 1.5rem; }
+  .user-badge { font-size: 0.85rem; color: var(--muted); }
+  .user-badge strong { color: var(--text); }
+  .expiry-badge {
+    font-size: 0.75rem; padding: 0.3rem 0.7rem;
+    border-radius: 4px; border: 1px solid; display: inline-flex; align-items: center; gap: 0.3rem;
+  }
+  .expiry-ok { border-color: rgba(76,175,80,0.4); color: var(--green); background: rgba(76,175,80,0.05); }
+  .expiry-warn { border-color: rgba(255,165,0,0.4); color: orange; background: rgba(255,165,0,0.05); }
+  .btn-logout {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.85rem; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-logout:hover { color: var(--red); }
+
+  /* ── Layout ── */
+  .app-layout { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 60px); }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    background: var(--dark2); border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 1.5rem 0; overflow-y: auto; position: sticky; top: 60px;
+    height: calc(100vh - 60px);
+  }
+  .sidebar-title {
+    font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); padding: 0.5rem 1.5rem 0.8rem;
+  }
+  .level-group { margin-bottom: 0.5rem; }
+  .level-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 1.5rem; cursor: pointer;
+    font-size: 0.8rem; font-weight: 500; color: var(--muted);
+    transition: color 0.2s; user-select: none;
+  }
+  .level-header:hover { color: var(--text); }
+  .level-header.has-active { color: var(--gold); }
+  .level-badge { font-size: 0.65rem; background: rgba(201,168,76,0.15); color: var(--gold); padding: 0.15rem 0.4rem; border-radius: 2px; }
+  .level-modules { display: none; padding-bottom: 0.5rem; }
+  .level-group.open .level-modules { display: block; }
+  .module-item {
+    padding: 0.6rem 1.5rem 0.6rem 2.5rem; cursor: pointer;
+    font-size: 0.85rem; color: var(--muted); transition: all 0.2s;
+    border-left: 2px solid transparent; margin-left: 0.5rem;
+    line-height: 1.4;
+  }
+  .module-item:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .module-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(201,168,76,0.05); }
+
+  /* Section toggle */
+  .section-toggle {
+    display: flex; margin: 0 1rem 1rem; background: var(--dark3);
+    border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.07);
+  }
+  .toggle-btn {
+    flex: 1; padding: 0.5rem; text-align: center; cursor: pointer;
+    font-size: 0.75rem; color: var(--muted); transition: all 0.2s;
+    border: none; background: none; font-family: 'DM Sans', sans-serif;
+  }
+  .toggle-btn.active { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .toggle-btn:hover:not(.active) { color: var(--text); }
+
+  /* ── Course View ── */
+  .course-area { padding: 2.5rem; overflow-y: auto; }
+  .welcome-screen { max-width: 600px; margin: 4rem auto; text-align: center; }
+  .welcome-screen h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 1rem; }
+  .welcome-screen p { color: var(--muted); line-height: 1.8; }
+  .welcome-icon { font-size: 3rem; margin-bottom: 1.5rem; }
+
+  /* Module header */
+  .module-header { margin-bottom: 2rem; }
+  .module-meta { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.7rem; letter-spacing: 1px; padding: 0.25rem 0.6rem;
+    border-radius: 2px; text-transform: uppercase; font-weight: 500;
+  }
+  .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .badge-blue { background: rgba(66,165,245,0.15); color: #42A5F5; border: 1px solid rgba(66,165,245,0.3); }
+  .module-title { font-family: 'Playfair Display', serif; font-size: 2rem; line-height: 1.2; margin-bottom: 0.5rem; }
+  .module-desc { color: var(--muted); line-height: 1.7; }
+
+  /* Video embed */
+  .video-embed {
+    margin: 2rem 0; border-radius: 8px; overflow: hidden;
+    aspect-ratio: 16/9; background: var(--dark3);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .video-embed iframe { width: 100%; height: 100%; border: none; }
+
+  /* Markdown content */
+  .module-content {
+    background: var(--dark2); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px; padding: 2rem; line-height: 1.8;
+    max-width: 760px;
+  }
+  .module-content h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--gold); margin: 0 0 1rem; }
+  .module-content h2 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 1.5rem 0 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .module-content h3 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--gold-light); }
+  .module-content p { margin-bottom: 1rem; }
+  .module-content ul, .module-content ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  .module-content li { margin-bottom: 0.4rem; }
+  .module-content strong { color: var(--gold-light); }
+  .module-content em { color: #B0A898; font-style: italic; }
+  .module-content code {
+    background: var(--dark3); padding: 0.15rem 0.4rem; border-radius: 3px;
+    font-family: monospace; font-size: 0.9em; color: var(--gold-light);
+  }
+  .module-content pre {
+    background: var(--dark3); padding: 1.2rem; border-radius: 6px;
+    overflow-x: auto; margin: 1rem 0; border: 1px solid rgba(255,255,255,0.07);
+  }
+  .module-content pre code { background: none; padding: 0; }
+  .module-content blockquote {
+    border-left: 3px solid var(--gold); padding-left: 1.2rem;
+    color: var(--muted); margin: 1rem 0; font-style: italic;
+  }
+  .module-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 1.5rem 0; }
+
+  /* Nav buttons */
+  .module-nav { display: flex; justify-content: space-between; margin-top: 2rem; max-width: 760px; }
+  .btn-nav-mod {
+    background: var(--dark2); border: 1px solid rgba(201,168,76,0.2); color: var(--gold);
+    padding: 0.7rem 1.5rem; border-radius: 4px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .btn-nav-mod:hover { background: rgba(201,168,76,0.1); }
+  .btn-nav-mod:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Loading */
+  .loading { display: flex; align-items: center; justify-content: center; height: 200px; }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid rgba(201,168,76,0.2);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; max-height: 300px; }
+    .course-area { padding: 1.5rem; }
+    header { padding: 1rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">
+      <h1>Lexicore</h1>
+      <p>Espace Apprenant</p>
+    </div>
+    <div class="field">
+      <label>Adresse email</label>
+      <input type="email" id="s-email" placeholder="votre@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="s-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-login" onclick="login()">Accéder à mes cours</button>
+    <div class="error-box" id="login-err">Identifiants incorrects ou accès expiré.</div>
+    <p style="text-align:center;color:var(--muted);font-size:0.8rem;margin-top:1.5rem">
+      Vous n'avez pas encore accès ? Contactez-nous sur WhatsApp.
+    </p>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <div class="logo">Lexicore <span>Formation</span></div>
+    <div class="user-info">
+      <div class="user-badge">Bonjour, <strong id="user-name"></strong></div>
+      <span class="expiry-badge expiry-ok" id="expiry-badge">⏰ Actif</span>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <div class="sidebar" id="sidebar">
+      <div id="section-toggle-wrapper"></div>
+      <div id="sidebar-content"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="course-area" id="course-area">
+      <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-icon">📖</div>
+        <h2>Bienvenue dans vos cours</h2>
+        <p>Sélectionnez un module dans le menu de gauche pour commencer votre apprentissage. Bonne étude !</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let studentToken = sessionStorage.getItem('lexicore_student_token') || '';
+let currentStudent = null;
+let allModules = [];
+let currentModuleId = null;
+let currentSection = 'general';
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function login() {
+  const email = document.getElementById('s-email').value;
+  const password = document.getElementById('s-password').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+
+  const res = await fetch(`${API}/student/login`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (data.token) {
+    studentToken = data.token;
+    sessionStorage.setItem('lexicore_student_token', studentToken);
+    currentStudent = data.student;
+    showApp();
+  } else {
+    errEl.textContent = data.error || 'Identifiants incorrects.';
+    errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('lexicore_student_token');
+  studentToken = ''; currentStudent = null; allModules = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if (studentToken) {
+    loadModulesAndShow();
+  }
+};
+
+async function loadModulesAndShow() {
+  const res = await fetch(`${API}/student/modules`, {
+    headers: { Authorization: `Bearer ${studentToken}` }
+  });
+  if (res.status === 401 || res.status === 403) { logout(); return; }
+  const data = await res.json();
+  if (data.student) currentStudent = data.student;
+  allModules = data.modules || [];
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Update header
+  document.getElementById('user-name').textContent = currentStudent.name;
+  const end = new Date(currentStudent.endDate);
+  const daysLeft = Math.ceil((end - Date.now()) / 86400000);
+  const badge = document.getElementById('expiry-badge');
+  if (daysLeft <= 7) {
+    badge.className = 'expiry-badge expiry-warn';
+    badge.textContent = `⚠️ Expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`;
+  } else {
+    badge.textContent = `✓ Accès jusqu'au ${currentStudent.endDate}`;
+  }
+
+  // Section toggle
+  const section = currentStudent.section;
+  const toggleWrapper = document.getElementById('section-toggle-wrapper');
+  if (section === 'both') {
+    toggleWrapper.innerHTML = `
+      <div class="section-toggle">
+        <button class="toggle-btn active" id="btn-general" onclick="switchSection('general')">📚 Général</button>
+        <button class="toggle-btn" id="btn-professional" onclick="switchSection('professional')">💼 Pro</button>
+      </div>`;
+    currentSection = 'general';
+  } else {
+    currentSection = section;
+    toggleWrapper.innerHTML = `
+      <div style="padding:0.5rem 1.5rem;font-size:0.8rem;color:var(--muted)">
+        ${section === 'general' ? '📚 Anglais Général' : '💼 Anglais Professionnel'}
+      </div>`;
+  }
+
+  if (!allModules.length) {
+    loadModulesAndShow();
+  } else {
+    renderSidebar();
+  }
+}
+
+function switchSection(sec) {
+  currentSection = sec;
+  document.getElementById('btn-general').className = `toggle-btn ${sec === 'general' ? 'active' : ''}`;
+  document.getElementById('btn-professional').className = `toggle-btn ${sec === 'professional' ? 'active' : ''}`;
+  renderSidebar();
+  document.getElementById('welcome-screen').style.display = 'block';
+  document.getElementById('course-area').innerHTML = `<div class="welcome-screen">
+    <div class="welcome-icon">📖</div>
+    <h2>Bienvenue dans vos cours</h2>
+    <p>Sélectionnez un module dans le menu de gauche pour commencer votre apprentissage.</p>
+  </div>`;
+  currentModuleId = null;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+const LEVELS = ['A1','A2','B1','B2','C1','C2'];
+const LEVEL_NAMES = {
+  A1:'A1 — Débutant', A2:'A2 — Élémentaire',
+  B1:'B1 — Intermédiaire', B2:'B2 — Intermédiaire supérieur',
+  C1:'C1 — Avancé', C2:'C2 — Maîtrise'
+};
+
+function renderSidebar() {
+  const mods = allModules.filter(m => m.section === currentSection);
+  const byLevel = {};
+  LEVELS.forEach(l => { byLevel[l] = []; });
+  mods.forEach(m => { if (byLevel[m.level]) byLevel[m.level].push(m); });
+
+  const html = LEVELS.map(level => {
+    const items = byLevel[level];
+    if (!items.length) return '';
+    const isActive = items.some(m => m.id === currentModuleId);
+    return `<div class="level-group ${isActive ? 'open' : ''}" id="level-${level}">
+      <div class="level-header ${isActive ? 'has-active' : ''}" onclick="toggleLevel('${level}')">
+        <span>${LEVEL_NAMES[level]}</span>
+        <span class="level-badge">${items.length}</span>
+      </div>
+      <div class="level-modules">
+        ${items.sort((a,b) => a.order - b.order).map(m => `
+          <div class="module-item ${m.id === currentModuleId ? 'active' : ''}"
+               onclick="loadModule(${m.id})" id="mi-${m.id}">
+            ${m.title}
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sidebar-content').innerHTML = html || '<div style="padding:1.5rem;color:var(--muted);font-size:0.85rem">Aucun module disponible dans cette section.</div>';
+}
+
+function toggleLevel(level) {
+  const el = document.getElementById(`level-${level}`);
+  el.classList.toggle('open');
+}
+
+// ── Module display ────────────────────────────────────────────────────────────
+function loadModule(id) {
+  const mod = allModules.find(m => m.id === id);
+  if (!mod) return;
+  currentModuleId = id;
+
+  // Update sidebar active states
+  document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById(`mi-${id}`);
+  if (el) { el.classList.add('active'); el.closest('.level-group').classList.add('open'); }
+
+  // Get sibling modules for navigation
+  const sectionMods = allModules.filter(m => m.section === currentSection).sort((a,b) => a.order - b.order);
+  const idx = sectionMods.findIndex(m => m.id === id);
+  const prev = sectionMods[idx - 1];
+  const next = sectionMods[idx + 1];
+
+  const sectionLabel = mod.section === 'general' ? 'Anglais Général' : 'Anglais Professionnel';
+
+  const html = `
+    <div class="module-header">
+      <div class="module-meta">
+        <span class="badge badge-gold">${mod.level}</span>
+        <span class="badge badge-blue">${sectionLabel}</span>
+      </div>
+      <h1 class="module-title">${mod.title}</h1>
+      ${mod.description ? `<p class="module-desc">${mod.description}</p>` : ''}
+    </div>
+
+    ${mod.videoUrl ? `
+      <div class="video-embed">
+        <iframe src="${mod.videoUrl}" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+      </div>` : ''}
+
+    <div class="module-content">${markdownToHtml(mod.content)}</div>
+
+    <div class="module-nav">
+      <button class="btn-nav-mod" onclick="loadModule(${prev?.id})" ${!prev ? 'disabled' : ''}>← Module précédent</button>
+      <button class="btn-nav-mod" onclick="loadModule(${next?.id})" ${!next ? 'disabled' : ''}>Module suivant →</button>
+    </div>
+  `;
+
+  const area = document.getElementById('course-area');
+  area.innerHTML = html;
+  area.scrollTop = 0;
+}
+
+// ── Simple Markdown parser ────────────────────────────────────────────────────
+function markdownToHtml(md) {
+  if (!md) return '<p style="color:var(--muted)">Contenu à venir...</p>';
+  let html = md
+    // Escape HTML
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Code blocks
+    .replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // H1
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // H2
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    // H3
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    // HR
+    .replace(/^---$/gm, '<hr>')
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Blockquote
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Unordered list items
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    // Ordered list items
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/(<li>[\s\S]+?<\/li>)(\n(?!<li>)|$)/g, '<ul>$1</ul>')
+    // Paragraphs (lines not starting with block tags)
+    .split('\n\n').map(block => {
+      if (/^<(h[1-6]|ul|ol|li|pre|blockquote|hr)/.test(block.trim())) return block;
+      if (!block.trim()) return '';
+      return `<p>${block.trim()}</p>`;
+    }).join('\n');
+  return html;
+}
+</script>
+</body>
+</html>

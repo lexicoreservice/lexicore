@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Lexicore Services</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C; --gold-light: #E8C870;
+    --dark: #0D0D0D; --dark2: #161616; --dark3: #1E1E1E;
+    --cream: #F5F0E8; --text: #E8E0D0; --muted: #888;
+    --green: #4CAF50; --red: #ef5350; --blue: #42A5F5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--dark); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* Login screen */
+  #login-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; gap: 1.5rem;
+  }
+  .login-box {
+    background: var(--dark2); border: 1px solid rgba(201,168,76,0.2);
+    padding: 3rem; border-radius: 6px; width: 100%; max-width: 380px; text-align: center;
+  }
+  .login-box h1 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 0.3rem; }
+  .login-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+  input, select, textarea {
+    width: 100%; background: var(--dark3); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text); padding: 0.8rem 1rem; border-radius: 4px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+  textarea { resize: vertical; min-height: 120px; }
+  select option { background: var(--dark3); }
+  label { display: block; font-size: 0.8rem; letter-spacing: 1px; color: var(--muted); margin-bottom: 0.4rem; text-transform: uppercase; }
+  .field { margin-bottom: 1.2rem; text-align: left; }
+  .btn {
+    background: var(--gold); color: var(--dark); border: none;
+    padding: 0.8rem 2rem; border-radius: 4px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    cursor: pointer; width: 100%; font-size: 0.95rem;
+    letter-spacing: 0.5px; transition: all 0.2s;
+  }
+  .btn:hover { background: var(--gold-light); }
+  .btn-sm {
+    background: transparent; border: 1px solid rgba(201,168,76,0.4);
+    color: var(--gold); padding: 0.4rem 1rem; border-radius: 4px;
+    cursor: pointer; font-size: 0.8rem; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .btn-sm:hover { background: rgba(201,168,76,0.1); }
+  .btn-red { border-color: rgba(239,83,80,0.4); color: var(--red); }
+  .btn-red:hover { background: rgba(239,83,80,0.1); }
+  .btn-green { border-color: rgba(76,175,80,0.4); color: var(--green); }
+  .btn-green:hover { background: rgba(76,175,80,0.1); }
+  .error-msg { color: var(--red); font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+  .success-msg { color: var(--green); font-size: 0.85rem; margin-top: 0.5rem; display: none; }
+
+  /* Dashboard */
+  #dashboard { display: none; }
+  header {
+    background: var(--dark2); border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .logo-header { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.3rem; }
+  .logo-header span { color: var(--muted); font-size: 0.7rem; font-family: 'DM Sans', sans-serif; letter-spacing: 2px; text-transform: uppercase; margin-left: 0.5rem; }
+  .header-right { display: flex; align-items: center; gap: 1.5rem; }
+  .header-right button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; font-family: 'DM Sans', sans-serif; }
+  .header-right button:hover { color: var(--red); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 0 2rem; background: var(--dark2); }
+  .tab {
+    padding: 1rem 1.5rem; cursor: pointer; font-size: 0.85rem; letter-spacing: 0.5px;
+    color: var(--muted); border-bottom: 2px solid transparent;
+    transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* Content */
+  .content { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--dark2); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px; padding: 1.5rem; margin-bottom: 1rem;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .card-title { font-size: 1rem; font-weight: 500; }
+  .card-subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem; }
+  .badge {
+    font-size: 0.7rem; letter-spacing: 1px; padding: 0.25rem 0.6rem;
+    border-radius: 2px; text-transform: uppercase; font-weight: 500;
+  }
+  .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .badge-blue { background: rgba(66,165,245,0.15); color: var(--blue); border: 1px solid rgba(66,165,245,0.3); }
+  .badge-green { background: rgba(76,175,80,0.15); color: var(--green); border: 1px solid rgba(76,175,80,0.3); }
+  .badge-red { background: rgba(239,83,80,0.15); color: var(--red); border: 1px solid rgba(239,83,80,0.3); }
+
+  /* Section heading */
+  .section-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+  .section-top h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+  .btn-add {
+    background: var(--gold); color: var(--dark); border: none;
+    padding: 0.6rem 1.4rem; border-radius: 4px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .btn-add:hover { background: var(--gold-light); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8); z-index: 200;
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--dark2); border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px; padding: 2rem; width: 100%; max-width: 540px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--gold); }
+  .modal-footer { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+  .btn-cancel {
+    background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--muted);
+    padding: 0.7rem 1.5rem; border-radius: 4px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+  }
+  .btn-save {
+    background: var(--gold); color: var(--dark); border: none;
+    padding: 0.7rem 1.5rem; border-radius: 4px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.9rem;
+  }
+  .btn-save:hover { background: var(--gold-light); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; padding: 0.8rem 1rem; color: var(--muted); font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  td { padding: 0.9rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .actions { display: flex; gap: 0.5rem; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--dark2); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px; padding: 1.5rem;
+  }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--gold); }
+  .stat-label { color: var(--muted); font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 0.3rem; }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+    background: var(--dark3); border: 1px solid rgba(201,168,76,0.3);
+    padding: 1rem 1.5rem; border-radius: 6px;
+    font-size: 0.9rem; opacity: 0; transform: translateY(10px);
+    transition: all 0.3s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: rgba(76,175,80,0.5); color: var(--green); }
+  #toast.error { border-color: rgba(239,83,80,0.5); color: var(--red); }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px) { .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>Lexicore</h1>
+    <p>Panneau d'administration</p>
+    <div class="field">
+      <label>Mot de passe admin</label>
+      <input type="password" id="admin-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <button class="btn" onclick="adminLogin()">Se connecter</button>
+    <p class="error-msg" id="login-err">Mot de passe incorrect</p>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <header>
+    <div class="logo-header">Lexicore <span>Admin</span></div>
+    <div class="header-right">
+      <span style="color:var(--muted);font-size:0.85rem">Connecté en tant qu'admin</span>
+      <button onclick="logout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">Vue d'ensemble</button>
+    <button class="tab" onclick="switchTab('students')">Apprenants</button>
+    <button class="tab" onclick="switchTab('modules')">Modules de cours</button>
+  </div>
+
+  <div class="content">
+
+    <!-- Overview Tab -->
+    <div id="tab-overview" class="tab-panel active">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Apprenants total</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-active">—</div><div class="stat-label">Accès actifs</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-expired">—</div><div class="stat-label">Accès expirés</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-modules">—</div><div class="stat-label">Modules de cours</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">Guide rapide</div><div class="card-subtitle">Comment gérer votre plateforme</div></div></div>
+        <div style="display:grid;gap:1rem;font-size:0.9rem;color:var(--muted);line-height:1.7">
+          <p>🎓 <strong style="color:var(--text)">Ajouter un apprenant</strong> — Allez dans "Apprenants", cliquez "Ajouter". Renseignez l'email, un mot de passe temporaire, la section et le plan. Le système calcule automatiquement la date d'expiration.</p>
+          <p>📚 <strong style="color:var(--text)">Ajouter des cours</strong> — Allez dans "Modules de cours", cliquez "Nouveau module". Choisissez la section (Général ou Professionnel), le niveau (A1–C2), et rédigez le contenu en Markdown.</p>
+          <p>⏰ <strong style="color:var(--text)">Expiration automatique</strong> — Les accès expirés sont bloqués automatiquement. L'apprenant voit un message lui demandant de renouveler.</p>
+          <p>🔑 <strong style="color:var(--text)">Partage des identifiants</strong> — Envoyez l'email et le mot de passe à l'apprenant par WhatsApp. Il se connecte sur <strong style="color:var(--gold)">/student/</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students Tab -->
+    <div id="tab-students" class="tab-panel">
+      <div class="section-top">
+        <h2>Apprenants</h2>
+        <button class="btn-add" onclick="openStudentModal()">+ Ajouter un apprenant</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th><th>Email</th><th>Section</th><th>Plan</th><th>Début</th><th>Fin</th><th>Statut</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody">
+              <tr><td colspan="8" class="empty-state">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modules Tab -->
+    <div id="tab-modules" class="tab-panel">
+      <div class="section-top">
+        <h2>Modules de cours</h2>
+        <button class="btn-add" onclick="openModuleModal()">+ Nouveau module</button>
+      </div>
+      <div id="modules-list">
+        <div class="empty-state">Chargement...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Student Modal -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <h3 id="student-modal-title">Ajouter un apprenant</h3>
+    <div class="form-row">
+      <div class="field"><label>Prénom & Nom</label><input type="text" id="s-name" placeholder="Marie Ouédraogo"></div>
+      <div class="field"><label>Email</label><input type="email" id="s-email" placeholder="marie@email.com"></div>
+    </div>
+    <div class="field"><label>Mot de passe temporaire</label><input type="text" id="s-password" placeholder="ex: Lexicore2025"></div>
+    <div class="form-row">
+      <div class="field">
+        <label>Section</label>
+        <select id="s-section">
+          <option value="general">Anglais Général</option>
+          <option value="professional">Anglais Professionnel</option>
+          <option value="both">Les deux sections</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Plan</label>
+        <select id="s-plan">
+          <option value="1month">1 mois</option>
+          <option value="2months">2 mois</option>
+          <option value="3months">3 mois</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Date de début d'accès</label><input type="date" id="s-start"></div>
+    <p class="error-msg" id="s-err">Erreur</p>
+    <p class="success-msg" id="s-ok"></p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('student-modal')">Annuler</button>
+      <button class="btn-save" onclick="saveStudent()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Module Modal -->
+<div class="modal-overlay" id="module-modal">
+  <div class="modal">
+    <h3 id="module-modal-title">Nouveau module</h3>
+    <input type="hidden" id="m-id">
+    <div class="form-row">
+      <div class="field">
+        <label>Section</label>
+        <select id="m-section">
+          <option value="general">Anglais Général</option>
+          <option value="professional">Anglais Professionnel</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Niveau</label>
+        <select id="m-level">
+          <option value="A1">A1 — Débutant</option>
+          <option value="A2">A2 — Élémentaire</option>
+          <option value="B1">B1 — Intermédiaire</option>
+          <option value="B2">B2 — Intermédiaire supérieur</option>
+          <option value="C1">C1 — Avancé</option>
+          <option value="C2">C2 — Maîtrise</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Titre du module</label><input type="text" id="m-title" placeholder="ex: Business Email Writing"></div>
+    <div class="field"><label>Description courte</label><input type="text" id="m-desc" placeholder="Ce module couvre..."></div>
+    <div class="field">
+      <label>Contenu (Markdown)</label>
+      <textarea id="m-content" style="min-height:200px" placeholder="# Titre du cours&#10;&#10;## Introduction&#10;Votre contenu ici...&#10;&#10;## Points clés&#10;- Point 1&#10;- Point 2"></textarea>
+    </div>
+    <div class="field"><label>URL Vidéo (YouTube embed, optionnel)</label><input type="text" id="m-video" placeholder="https://www.youtube.com/embed/VIDEO_ID"></div>
+    <div class="field"><label>Ordre d'affichage</label><input type="number" id="m-order" placeholder="1" min="1"></div>
+    <p class="error-msg" id="m-err">Erreur</p>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('module-modal')">Annuler</button>
+      <button class="btn-save" onclick="saveModule()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '/api';
+let adminToken = localStorage.getItem('lexicore_admin_token') || '';
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+async function adminLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  const res = await fetch(`${API}/admin/login`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ password: pw })
+  });
+  const data = await res.json();
+  if (data.token) {
+    adminToken = data.token;
+    localStorage.setItem('lexicore_admin_token', adminToken);
+    showDashboard();
+  } else {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('lexicore_admin_token');
+  adminToken = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` };
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('s-start').value = today;
+  if (adminToken) {
+    verifyAndShow();
+  }
+};
+
+async function verifyAndShow() {
+  const res = await fetch(`${API}/admin/students`, { headers: authHeaders() });
+  if (res.status === 401) { adminToken = ''; localStorage.removeItem('lexicore_admin_token'); return; }
+  showDashboard();
+}
+
+function showDashboard() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadAll();
+}
+
+// ── Data Loading ──────────────────────────────────────────────────────────────
+let allStudents = [], allModules = [];
+
+async function loadAll() {
+  await Promise.all([loadStudents(), loadModules()]);
+  updateStats();
+}
+
+async function loadStudents() {
+  const res = await fetch(`${API}/admin/students`, { headers: authHeaders() });
+  allStudents = await res.json();
+  renderStudents();
+}
+
+async function loadModules() {
+  const res = await fetch(`${API}/admin/modules`, { headers: authHeaders() });
+  allModules = await res.json();
+  renderModules();
+}
+
+function updateStats() {
+  const now = Date.now();
+  const active = allStudents.filter(s => new Date(s.endDate).getTime() > now).length;
+  document.getElementById('stat-total').textContent = allStudents.length;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-expired').textContent = allStudents.length - active;
+  document.getElementById('stat-modules').textContent = allModules.length;
+}
+
+// ── Render Students ───────────────────────────────────────────────────────────
+function renderStudents() {
+  const tbody = document.getElementById('students-tbody');
+  if (!allStudents.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Aucun apprenant pour le moment</td></tr>';
+    return;
+  }
+  const now = Date.now();
+  tbody.innerHTML = allStudents.map(s => {
+    const expired = new Date(s.endDate).getTime() < now;
+    const planLabel = { '1month': '1 mois', '2months': '2 mois', '3months': '3 mois' }[s.plan] || s.plan;
+    const sectionLabel = { 'general': 'Général', 'professional': 'Professionnel', 'both': 'Les deux' }[s.section] || s.section;
+    return `<tr>
+      <td>${s.name}</td>
+      <td style="color:var(--muted)">${s.email}</td>
+      <td><span class="badge badge-blue">${sectionLabel}</span></td>
+      <td><span class="badge badge-gold">${planLabel}</span></td>
+      <td style="color:var(--muted)">${s.startDate}</td>
+      <td style="color:var(--muted)">${s.endDate}</td>
+      <td><span class="badge ${expired ? 'badge-red' : 'badge-green'}">${expired ? 'Expiré' : 'Actif'}</span></td>
+      <td class="actions">
+        <button class="btn-sm btn-red" onclick="deleteStudent('${s.email}')">Supprimer</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Render Modules ────────────────────────────────────────────────────────────
+function renderModules() {
+  const container = document.getElementById('modules-list');
+  if (!allModules.length) {
+    container.innerHTML = '<div class="empty-state">Aucun module. Cliquez "Nouveau module" pour commencer.</div>';
+    return;
+  }
+  const bySection = {};
+  allModules.forEach(m => {
+    if (!bySection[m.section]) bySection[m.section] = [];
+    bySection[m.section].push(m);
+  });
+  const sectionNames = { general: '📚 Anglais Général', professional: '💼 Anglais Professionnel' };
+  container.innerHTML = Object.entries(bySection).map(([sec, mods]) => `
+    <h3 style="color:var(--gold);margin:1.5rem 0 0.8rem;font-family:'Playfair Display',serif">${sectionNames[sec] || sec}</h3>
+    ${mods.sort((a,b) => a.order - b.order).map(m => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${m.title}</div>
+            <div class="card-subtitle">${m.description || ''}</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <span class="badge badge-gold">${m.level}</span>
+            <button class="btn-sm" onclick="openModuleModal(${JSON.stringify(m).replace(/"/g,'&quot;')})">Modifier</button>
+            <button class="btn-sm btn-red" onclick="deleteModule(${m.id})">Supprimer</button>
+          </div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted)">Ordre: ${m.order} ${m.videoUrl ? '· 🎬 Vidéo' : ''}</div>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+// ── Student CRUD ──────────────────────────────────────────────────────────────
+function openStudentModal() {
+  document.getElementById('student-modal-title').textContent = 'Ajouter un apprenant';
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-email').value = '';
+  document.getElementById('s-password').value = '';
+  document.getElementById('s-section').value = 'general';
+  document.getElementById('s-plan').value = '1month';
+  document.getElementById('s-start').value = new Date().toISOString().split('T')[0];
+  document.getElementById('s-err').style.display = 'none';
+  document.getElementById('s-ok').style.display = 'none';
+  document.getElementById('student-modal').classList.add('open');
+}
+
+async function saveStudent() {
+  const body = {
+    name: document.getElementById('s-name').value,
+    email: document.getElementById('s-email').value,
+    password: document.getElementById('s-password').value,
+    section: document.getElementById('s-section').value,
+    plan: document.getElementById('s-plan').value,
+    startDate: document.getElementById('s-start').value,
+  };
+  const res = await fetch(`${API}/admin/students`, {
+    method: 'POST', headers: authHeaders(), body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (res.ok) {
+    const ok = document.getElementById('s-ok');
+    ok.textContent = `✓ Apprenant créé ! Accès jusqu'au ${data.endDate}`;
+    ok.style.display = 'block';
+    await loadStudents(); updateStats();
+    toast('Apprenant créé avec succès', 'success');
+    setTimeout(() => closeModal('student-modal'), 2000);
+  } else {
+    const err = document.getElementById('s-err');
+    err.textContent = data.error; err.style.display = 'block';
+  }
+}
+
+async function deleteStudent(email) {
+  if (!confirm(`Supprimer l'apprenant ${email} ?`)) return;
+  await fetch(`${API}/admin/students/${email}`, { method: 'DELETE', headers: authHeaders() });
+  await loadStudents(); updateStats();
+  toast('Apprenant supprimé', 'success');
+}
+
+// ── Module CRUD ───────────────────────────────────────────────────────────────
+function openModuleModal(mod) {
+  document.getElementById('m-err').style.display = 'none';
+  if (mod) {
+    document.getElementById('module-modal-title').textContent = 'Modifier le module';
+    document.getElementById('m-id').value = mod.id;
+    document.getElementById('m-section').value = mod.section;
+    document.getElementById('m-level').value = mod.level;
+    document.getElementById('m-title').value = mod.title;
+    document.getElementById('m-desc').value = mod.description;
+    document.getElementById('m-content').value = mod.content;
+    document.getElementById('m-video').value = mod.videoUrl || '';
+    document.getElementById('m-order').value = mod.order;
+  } else {
+    document.getElementById('module-modal-title').textContent = 'Nouveau module';
+    document.getElementById('m-id').value = '';
+    document.getElementById('m-section').value = 'general';
+    document.getElementById('m-level').value = 'A1';
+    document.getElementById('m-title').value = '';
+    document.getElementById('m-desc').value = '';
+    document.getElementById('m-content').value = '';
+    document.getElementById('m-video').value = '';
+    document.getElementById('m-order').value = allModules.length + 1;
+  }
+  document.getElementById('module-modal').classList.add('open');
+}
+
+async function saveModule() {
+  const id = document.getElementById('m-id').value;
+  const body = {
+    section: document.getElementById('m-section').value,
+    level: document.getElementById('m-level').value,
+    title: document.getElementById('m-title').value,
+    description: document.getElementById('m-desc').value,
+    content: document.getElementById('m-content').value,
+    videoUrl: document.getElementById('m-video').value,
+    order: parseInt(document.getElementById('m-order').value) || 1,
+  };
+  const url = id ? `${API}/admin/modules/${id}` : `${API}/admin/modules`;
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+  const data = await res.json();
+  if (res.ok) {
+    await loadModules(); updateStats();
+    closeModal('module-modal');
+    toast(id ? 'Module mis à jour' : 'Module créé', 'success');
+  } else {
+    const err = document.getElementById('m-err');
+    err.textContent = data.error; err.style.display = 'block';
+  }
+}
+
+async function deleteModule(id) {
+  if (!confirm('Supprimer ce module ?')) return;
+  await fetch(`${API}/admin/modules/${id}`, { method: 'DELETE', headers: authHeaders() });
+  await loadModules(); updateStats();
+  toast('Module supprimé', 'success');
+}
+
+// ── UI Helpers ────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const tabs = ['overview', 'students', 'modules'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
